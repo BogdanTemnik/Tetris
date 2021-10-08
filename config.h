@@ -39,6 +39,11 @@ struct Figure{
     int coords[4][2];
 };
 
+int rotated_coords[4][2];
+
 std::vector<Figure> figures;
+
+float timer = 0;
+	float delay = 0.3;
 
 #endif // CONFIG_H_INCLUDED

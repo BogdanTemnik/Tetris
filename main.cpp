@@ -2,6 +2,7 @@
 #include "config.h"
 #include <iostream>
 #include "time.h"
+#include <cmath>
 
 void is_movement_down_possible();
 void draw_field();
@@ -10,14 +11,18 @@ void move_aside(int);
 bool is_movement_right_possible();
 bool is_movement_left_possible();
 void set_up_new_figure();
-bool is_movement_aside_possible();
+bool is_figure_collided_with_others();
+bool is_here_another_figure_by_right_side();
+bool is_here_another_figure_by_left_side();
+void set_rotated_coords();
 
 int main(){
     srand(time(NULL));
+    //set up first block
     set_up_new_figure();
 
-    float timer = 0;
-	float delay = 0.3;
+
+	bool check = true;
 
 
 	sf::Clock clock;
@@ -47,10 +52,24 @@ int main(){
                 std::cout << "right\n";
                 move_aside(1);
             }
+            // move upwards
+
+            if(evnt.type == sf::Event::KeyPressed && evnt.key.code == sf::Keyboard::W){
+                    set_rotated_coords();
+                    for(int i = 0;i < 4;i++){
+                        std::cout << "rotated: \n";
+                        std::cout << rotated_coords[i][0] << " " << rotated_coords[i][1] << std::endl;
+                    }
+                for(int i = 0;i < 4;i++){
+                    std::cout << figures[figures.size() - 1].coords[i][0] << " " << figures[figures.size() - 1].coords[i][1] << std::endl;
+                }
+                std::cout << std::endl;
+            }
         }
 
 
         //game
+
         is_movement_down_possible();
         if(figures[figures.size() - 1].movement && timer > delay){
 
@@ -61,6 +80,7 @@ int main(){
         if(!figures[figures.size() - 1].movement){
                 set_up_new_figure();
         }
+
 
         window.clear();
         draw_field();
@@ -81,16 +101,65 @@ void draw_field(){
     }
 }
 
-void is_movement_down_possible(){
-    Figure last_figure = figures[figures.size() - 1];
+void set_rotated_coords(){
+     Figure current_figure = figures[figures.size() - 1];
+     //осевой блок фигуры
+     int original_center[2];
+
+     //осевой блок фигуры после изменения
+     int rotated_center[2];
+
+     //присваивание координат оригинальному осевому блоку
+     original_center[0] = current_figure.coords[0][0];
+     original_center[1] = current_figure.coords[0][1];
+
+     //установка rotated координат
+    for(int i = 0;i < 4;i++){
+        rotated_coords[i][0] = current_figure.coords[i][1];
+        rotated_coords[i][1] = -current_figure.coords[i][0];
+    }
+
+    //присваивание координат измененому осевому центру
+    rotated_center[0] = rotated_coords[0][0];
+    rotated_center[1] = rotated_coords[0][1];
+
+    //присваивание измененных координат фигуре
+    for(int i = 0;i < 4;i++){
+        figures[figures.size() - 1].coords[i][0] = rotated_coords[i][0];
+        figures[figures.size() - 1].coords[i][1] = rotated_coords[i][1];
+    }
+
+    //нахождение разницы по координатам между оригинальным и измененными центрами
+    int gap_x = std::abs(original_center[0] - rotated_center[0]);
+    int gap_y  = std::abs(original_center[1] - rotated_center[1]);
+
+    //выравнивание фигуры с измененными координатами на исходное место
+    for(int i = 0;i < 4;i++){
+        figures[figures.size() - 1].coords[i][0] += gap_x;
+        figures[figures.size() - 1].coords[i][1] += gap_y;
+    }
+}
+
+bool is_figure_collided_with_others(){
+    Figure current_figure = figures[figures.size() - 1];
     for(int i = 0;i < figures.size() - 1;i++){
-            for(int j = 0;j < 4;j++){
-                for(int k = 0;k < 4;k++){
-                    if(figures[i].coords[j][1] == last_figure.coords[k][1] || last_figure.coords[j][1] * BLOCK  + BLOCK== HEIGHT){
-                        figures[figures.size() - 1].movement = false;
-                    }
+        for(int j = 0;j < 4;j++){
+            for(int k = 0;k < 4;k++){
+                if(figures[i].coords[j][1] * BLOCK - BLOCK == current_figure.coords[k][1] * BLOCK && figures[i].coords[j][0] * BLOCK == current_figure.coords[k][0] * BLOCK){
+                    return true;
                 }
             }
+        }
+    }
+    return false;
+}
+
+void is_movement_down_possible(){
+    Figure current_figure = figures[figures.size() - 1];
+    for(int i = 0;i < 4;i++){
+        if(current_figure.coords[i][1] * BLOCK + BLOCK == HEIGHT || is_figure_collided_with_others()){
+            figures[figures.size() - 1].movement = false;
+        }
     }
 }
 
@@ -106,24 +175,50 @@ void move_aside(int dir){
     }
 }
 
+bool is_here_another_figure_by_right_side(){
+    Figure current_figure = figures[figures.size() - 1];
+    for(int i = 0;i < figures.size() - 1;i++){
+        for(int j = 0;j < 4;j++){
+            for(int k = 0;k < 4;k++){
+                if(current_figure.coords[k][0] * BLOCK + BLOCK == figures[i].coords[j][0] * BLOCK && current_figure.coords[k][1] * BLOCK == figures[i].coords[j][1] * BLOCK){
+                        std::cout << "there is a figure by right side!!!!\n";
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
 
 bool is_movement_right_possible(){
     Figure last_figure = figures[figures.size() - 1];
     for(int i = 0;i < 4;i++){
-            std::cout << last_figure.coords[i][0] * BLOCK << std::endl;
-        if(last_figure.coords[i][0] * BLOCK + BLOCK  >= WIDTH && last_figure.movement){
+        if(last_figure.coords[i][0] * BLOCK + BLOCK  >= WIDTH || is_here_another_figure_by_right_side()){
             return false;
         }
     }
     return true;
 }
 
+bool is_here_another_figure_by_left_side(){
+    Figure current_figure = figures[figures.size() - 1];
+    for(int i = 0;i < figures.size() - 1;i++){
+        for(int j = 0;j < 4;j++){
+            for(int k = 0;k < 4;k++){
+                if(current_figure.coords[k][0] * BLOCK - BLOCK == figures[i].coords[j][0] * BLOCK && current_figure.coords[k][1] * BLOCK == figures[i].coords[j][1] * BLOCK){
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 bool is_movement_left_possible(){
 
     Figure last_figure = figures[figures.size() - 1];
     for(int i = 0;i < 4;i++){
-            std::cout << last_figure.coords[i][0] * BLOCK << std::endl;
-        if(last_figure.coords[i][0] * BLOCK <= 0 && last_figure.movement){
+        if(last_figure.coords[i][0] * BLOCK <= 0 || is_here_another_figure_by_left_side()){
             return false;
         }
     }

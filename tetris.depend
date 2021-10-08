@@ -1,9 +1,10 @@
 # depslib dependency file v1.0
-1633590107 source:e:\code\tetris\tetris\main.cpp
+1633700904 source:e:\code\tetris\tetris\main.cpp
 	<SFML/Graphics.hpp>
 	"config.h"
 	<iostream>
 	"time.h"
+	<cmath>
 
 1525815618 e:\code\libraries\sfml\sfml-2.5.1\include\sfml\graphics.hpp
 	<SFML/Window.hpp>
@@ -419,7 +420,7 @@
 1633383185 source:e:\code\tetris\tetris\figure.cpp
 	"Figure.h"
 
-1633588531 e:\code\tetris\tetris\config.h
+1633693567 e:\code\tetris\tetris\config.h
 	<vector>
 
 1633383185 e:\code\tetris\tetris\figure.h
